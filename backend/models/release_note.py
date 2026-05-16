@@ -25,8 +25,6 @@ from app.db.base import Base
 class ReleaseNote(Base):
     """
     Таблица релиз-заметок.
-
-    Один проект может иметь много релизов.
     """
 
     __tablename__ = "release_notes"
