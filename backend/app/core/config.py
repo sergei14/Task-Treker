@@ -1,125 +1,122 @@
 """
 config.py
 
-Этот файл хранит все настройки приложения в одном месте.
-
-Здесь определяются:
-- основные параметры приложения (имя, версия, режим);
+Файл хранит основные настройки backend-приложения:
+- название, версию и режим запуска;
 - настройки базы данных;
-- пути к файлам;
-- настройки API;
-- лимиты и служебные параметры.
+- пути к папкам загрузок и логов;
+- настройки API и CORS;
+- ограничения для файлов;
+- параметры публичных токенов;
+- настройки логирования.
 
-Все значения можно переопределять через:
-- переменные окружения
-- файл .env
+Значения можно переопределять через переменные окружения
+или файл backend/.env.
 """
 
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import Literal
 
-from pydantic import Field
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+DEFAULT_DATABASE_PATH = BACKEND_DIR / "tracker.db"
+DEFAULT_DATABASE_URL = f"sqlite:///{DEFAULT_DATABASE_PATH.as_posix()}"
+
+
 class Settings(BaseSettings):
-    """
-    Основной класс настроек приложения.
-
-    Pydantic автоматически:
-    - читает значения из .env
-    - читает переменные окружения
-    - валидирует типы
-
-    Приоритет значений:
-    1. Переменные окружения
-    2. .env файл
-    3. Значения по умолчанию
-    """
-
-    # =========================
-    # Общие настройки
-    # =========================
-    app_name: str = "Task Tracker"
+    app_name: str = "Task Tracker API"
     app_version: str = "0.1.0"
     debug: bool = True
+    environment: Literal["development", "testing", "production"] = "development"
 
-    # Окружение: development / staging / production
-    environment: str = Field(default="development")
-
-    # =========================
-    # База данных
-    # =========================
-    # Для разработки используем SQLite.
-    # В будущем можно заменить на Postgres без изменения кода.
-    database_url: str = "sqlite+aiosqlite:///./tracker.db"
-
-    # =========================
-    # Пути
-    # =========================
-    # Корень проекта (tracker/)
-    base_dir: Path = Path(__file__).resolve().parents[3]
-
-    # Относительный путь для загрузки файлов
-    uploads_dir: Path = Path("uploads")
-
-    # =========================
-    # API
-    # =========================
     api_prefix: str = "/api"
 
-    # =========================
-    # CORS (⚠️ только для разработки)
-    # =========================
-    cors_origins: List[str] = ["*"]
+    database_url: str = DEFAULT_DATABASE_URL
 
-    # =========================
-    # Файлы
-    # =========================
+    base_dir: Path = BACKEND_DIR
+    uploads_dir: Path = Path("uploads")
+    logs_dir: Path = Path("logs")
+
+    cors_origins: list[str] = ["*"]
+
     max_upload_mb: int = 2
 
-    # =========================
-    # Токены (для публичного фидбека)
-    # =========================
+    allowed_file_extensions: list[str] = [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".txt",
+    ]
+
     token_length: int = 32
 
-    # =========================
-    # Логирование
-    # =========================
-    log_level: str = "INFO"
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BACKEND_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
-    def get_upload_path(self) -> Path:
-        """
-        Возвращает абсолютный путь к папке uploads
-        и создаёт её при необходимости.
+    @field_validator("api_prefix")
+    @classmethod
+    def validate_api_prefix(cls, value: str) -> str:
+        value = value.strip()
 
-        Returns:
-            Path: полный путь до директории загрузок
-        """
-        full_path = self.base_dir / self.uploads_dir
-        full_path.mkdir(parents=True, exist_ok=True)
-        return full_path
+        if not value:
+            return "/api"
+
+        if not value.startswith("/"):
+            value = f"/{value}"
+
+        return value.rstrip("/")
+
+    @field_validator("max_upload_mb")
+    @classmethod
+    def validate_max_upload_mb(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("max_upload_mb должен быть больше нуля")
+
+        return value
+
+    @field_validator("token_length")
+    @classmethod
+    def validate_token_length(cls, value: int) -> int:
+        if value < 16:
+            raise ValueError("token_length должен быть не меньше 16")
+
+        return value
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_mb * 1024 * 1024
+
+    @property
+    def is_development(self) -> bool:
+        return self.environment == "development"
+
+    def get_upload_path(self) -> Path:
+        upload_path = self.base_dir / self.uploads_dir
+        upload_path.mkdir(parents=True, exist_ok=True)
+        return upload_path
+
+    def get_logs_path(self) -> Path:
+        logs_path = self.base_dir / self.logs_dir
+        logs_path.mkdir(parents=True, exist_ok=True)
+        return logs_path
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """
-    Возвращает singleton-объект настроек.
-
-    Используем кэш, чтобы:
-    - не перечитывать .env при каждом импорте
-    - использовать один объект во всём приложении
-    """
     return Settings()
 
 
-# Глобальный объект настроек
 settings = get_settings()

@@ -3,67 +3,61 @@ project_doc.py
 
 Модель документации проекта.
 
-Здесь хранится расширенная информация о проекте:
-- описание архитектуры;
-- бизнес-логика;
+Один проект может содержать несколько документов:
+- общее описание;
+- техническую документацию;
 - инструкции;
-- внутренние заметки команды.
+- заметки по реализации;
+- описание API или бизнес-логики.
 
-Почему это отдельная сущность:
-- документация может быть большой;
-- её удобно версионировать или расширять;
-- можно разделять по разделам (pages / articles).
+Каждый документ связан с конкретным проектом
+и может редактироваться в процессе работы.
 """
 
 from datetime import datetime
 
-from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
 
 class ProjectDoc(Base):
-    """
-    Документация проекта.
-
-    Один проект может иметь несколько документов:
-    - архитектура;
-    - API описание;
-    - гайды;
-    - заметки.
-    """
-
     __tablename__ = "project_docs"
 
-    # =========================
-    # ID
-    # =========================
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    # =========================
-    # Связь с проектом
-    # =========================
     project_id: Mapped[int] = mapped_column(
-        ForeignKey("projects.id"),
-        index=True
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
-    # =========================
-    # Заголовок документа
-    # =========================
-    title: Mapped[str] = mapped_column(String)
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
 
-    # =========================
-    # Контент документа
-    # =========================
-    # пока простой текст, потом можно заменить на markdown/html
-    content: Mapped[str] = mapped_column(String)
+    content: Mapped[str] = mapped_column(
+        Text,
+        default="",
+        nullable=False,
+    )
 
-    # =========================
-    # Метаданные
-    # =========================
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    project = relationship(
+        "Project",
+        back_populates="documents",
     )

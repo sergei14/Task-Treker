@@ -1,70 +1,60 @@
 """
 feedback.py
 
-Модель обратной связи.
+Модель обратной связи по проекту.
 
-Теперь фидбек:
-- принадлежит конкретному проекту;
-- может быть создан без авторизации;
-- доступен через token;
-- может содержать баги / пожелания / кейсы.
+Фидбек относится к конкретному проекту и представляет собой
+комментарий одного из трёх типов:
+- bug — сообщение об ошибке;
+- feature — пожелание или предложение;
+- case — описание кейса использования.
+
+Фидбек может быть оставлен пользователем через публичную страницу
+проекта без обязательной авторизации(пока что).
 """
+from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
-from sqlalchemy import String, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
 
-class Feedback(Base):
-    """
-    Таблица фидбеков проекта.
-    """
+class FeedbackType(str, Enum):
+    BUG = "bug"
+    FEATURE = "feature"
+    CASE = "case"
 
+
+class Feedback(Base):
     __tablename__ = "feedbacks"
 
-    # =========================
-    # ID
-    # =========================
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    # =========================
-    # Связь с проектом
-    # =========================
     project_id: Mapped[int] = mapped_column(
-        ForeignKey("projects.id"),
-        index=True
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
-    # =========================
-    # Токен доступа
-    # =========================
-    # используется для доступа без авторизации (например, форма)
-    token: Mapped[str] = mapped_column(String, index=True)
+    type: Mapped[FeedbackType] = mapped_column(
+        SqlEnum(FeedbackType, name="feedback_type"),
+        nullable=False,
+        index=True,
+    )
 
-    # =========================
-    # Тип фидбека
-    # =========================
-    # bug / feature / case
-    type: Mapped[str] = mapped_column(String, index=True)
+    full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    direction: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
-    # =========================
-    # Данные пользователя
-    # =========================
-    full_name: Mapped[str] = mapped_column(String)
-    direction: Mapped[str] = mapped_column(String)
+    comment: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # =========================
-    # Контент
-    # =========================
-    comment: Mapped[str] = mapped_column(String)
-
-    # =========================
-    # Метаданные
-    # =========================
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
+        nullable=False,
     )
+
+    project = relationship("Project", back_populates="feedbacks")

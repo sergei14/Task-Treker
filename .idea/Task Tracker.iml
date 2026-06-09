@@ -7,8 +7,9 @@
       <sourceFolder url="file://$MODULE_DIR$/backend/app/db" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/backend" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv1" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 (Task Tracker)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 (Task Tracker)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

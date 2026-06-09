@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --line: #e3e8f2;
+            --text: #1f2937;
+            --muted: #64748b;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #d97706;
+            --radius: 14px;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            padding: 18px 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        header span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 68px);
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .card h2,
+        .card h3 {
+            margin: 0 0 14px;
+        }
+
+        .sidebar {
+            min-width: 0;
+        }
+
+        .workspace {
+            min-width: 0;
+        }
+
+        .empty {
+            display: flex;
+            min-height: 420px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--muted);
+            background: var(--card);
+            border: 1px dashed var(--line);
+            border-radius: var(--radius);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            padding: 10px 11px;
+            font: inherit;
+            background: white;
+            margin-bottom: 11px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 10px 13px;
+            cursor: pointer;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button.secondary {
+            background: #eef2ff;
+            color: var(--primary);
+        }
+
+        button.secondary:hover {
+            background: #dbeafe;
+        }
+
+        button.danger {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        button.danger:hover {
+            background: #fecaca;
+        }
+
+        button.small {
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .row > * {
+            flex: 1;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .project-item {
+            border: 1px solid var(--line);
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 9px;
+        }
+
+        .project-item:hover,
+        .project-item.active {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .project-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .badge.active,
+        .badge.done {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .badge.completed,
+        .badge.in_progress {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .badge.archived,
+        .badge.cancelled {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .badge.high,
+        .badge.critical,
+        .badge.bug {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .badge.medium,
+        .badge.feature {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .badge.case,
+        .badge.low,
+        .badge.todo {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(300px, 1fr));
+            gap: 18px;
+        }
+
+        .item {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .item-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 7px;
+        }
+
+        .item-title strong {
+            word-break: break-word;
+        }
+
+        .item-text {
+            margin: 8px 0;
+            white-space: pre-wrap;
+            line-height: 1.45;
+        }
+
+        .task-item {
+            cursor: pointer;
+        }
+
+        .task-item.selected {
+            border-color: var(--primary);
+            background: #f8fbff;
+        }
+
+        .top-project {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+
+        .top-project h2 {
+            margin: 0 0 7px;
+        }
+
+        .counter {
+            border-radius: 10px;
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 12px 16px;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        .counter strong {
+            display: block;
+            font-size: 26px;
+        }
+
+        .notice {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            min-width: 270px;
+            padding: 13px 16px;
+            border-radius: 10px;
+            color: white;
+            background: var(--success);
+            display: none;
+            z-index: 10;
+        }
+
+        .notice.error {
+            background: var(--danger);
+        }
+
+        .link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        @media (max-width: 1050px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>Task Tracker</h1>
+    <span>Минимальный интерфейс проверки API</span>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <section class="card">
+            <h3>Новый проект</h3>
+
+            <form id="projectCreateForm">
+                <label for="projectCreateName">Название</label>
+                <input id="projectCreateName" required placeholder="Например, Мобильное приложение">
+
+                <label for="projectCreateDescription">Описание</label>
+                <textarea id="projectCreateDescription" placeholder="Краткое описание проекта"></textarea>
+
+                <button type="submit">Создать проект</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="item-title">
+                <h3>Проекты</h3>
+                <button class="secondary small" onclick="loadProjects()">Обновить</button>
+            </div>
+
+            <select id="projectStatusFilter" onchange="loadProjects()">
+                <option value="">Все проекты</option>
+                <option value="active">Текущие</option>
+                <option value="completed">Завершённые</option>
+                <option value="archived">Архивные</option>
+            </select>
+
+            <div id="projectsList"></div>
+        </section>
+    </aside>
+
+    <main class="workspace">
+        <div id="emptyWorkspace" class="empty">
+            <div>
+                <h2>Выбери проект</h2>
+                <p>Создай новый проект или открой существующий слева.</p>
+            </div>
+        </div>
+
+        <div id="projectWorkspace" class="hidden">
+            <section class="card">
+                <div class="top-project">
+                    <div>
+                        <h2 id="currentProjectName"></h2>
+                        <div id="currentProjectStatus"></div>
+                        <p id="currentProjectDescription" class="item-text"></p>
+                        <div class="muted" id="currentProjectToken"></div>
+                    </div>
+
+                    <div class="counter">
+                        <strong id="storyPointsTotal">0</strong>
+                        сторипоинтов
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="secondary small" onclick="editCurrentProject()">Изменить проект</button>
+                    <button class="danger small" onclick="deleteCurrentProject()">Удалить проект</button>
+                </div>
+            </section>
+
+            <div class="section-grid">
+                <section class="card">
+                    <h3>Документация</h3>
+
+                    <form id="documentForm">
+                        <input id="documentTitle" required placeholder="Заголовок документа">
+                        <textarea id="documentContent" placeholder="Содержание документа"></textarea>
+                        <button type="submit">Добавить документ</button>
+                    </form>
+
+                    <hr>
+                    <div id="documentsList"></div>
+                </section>
+
+                <section class="card">
+                    <h3>Релизноты</h3>
+
+                    <form id="releaseForm">
+                        <div class="row">
+                            <input id="releaseVersion" required placeholder="Версия: 1.0.0">
+                            <input id="releaseTitle" required placeholder="Название релиза">
+                        </div>
+                        <textarea id="releaseDescription" placeholder="Что изменилось"></textarea>
+                        <button type="submit">Добавить релизнот</button>
+                    </form>
+
+                    <hr>
+                    <div id="releaseNotesList"></div>
+                </section>
+            </div>
+
+            <div class="section-grid">
+                <section class="card">
+                    <h3>Задачи</h3>
+
+                    <form id="taskForm">
+                        <input id="taskTitle" required placeholder="Название задачи">
+                        <textarea id="taskDescription" placeholder="Описание задачи"></textarea>
+
+                        <div class="row">
+                            <select id="taskPriority">
+                                <option value="low">Низкий приоритет</option>
+                                <option value="medium" selected>Средний приоритет</option>
+                                <option value="high">Высокий приоритет</option>
+                                <option value="critical">Критический приоритет</option>
+                            </select>
+
+                            <input id="taskPoints" type="number" min="0" placeholder="Сторипоинты">
+                        </div>
+
+                        <button type="submit">Добавить задачу</button>
+                    </form>
+
+                    <hr>
+                    <div id="tasksList"></div>
+                </section>
+
+                <section class="card">
+                    <h3>Выбранная задача</h3>
+
+                    <div id="taskEmpty" class="muted">
+                        Нажми на задачу слева, чтобы открыть детали.
+                    </div>
+
+                    <div id="taskDetails" class="hidden">
+                        <div id="selectedTaskInfo"></div>
+
+                        <h3>Сторипоинты</h3>
+                        <form id="storyPointForm">
+                            <div class="row">
+                                <input id="storyPointValue" type="number" min="0" required placeholder="Количество">
+                                <button type="submit">Сохранить</button>
+                            </div>
+                        </form>
+
+                        <h3>Подзадачи</h3>
+                        <form id="subtaskForm">
+                            <input id="subtaskTitle" required placeholder="Название подзадачи">
+                            <textarea id="subtaskDescription" placeholder="Описание подзадачи"></textarea>
+                            <button type="submit">Добавить подзадачу</button>
+                        </form>
+
+                        <div id="subtasksList"></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="section-grid">
+                <section class="card">
+                    <h3>Фидбеки</h3>
+
+                    <form id="feedbackForm">
+                        <select id="feedbackType">
+                            <option value="bug">Баг</option>
+                            <option value="feature">Пожелание</option>
+                            <option value="case">Кейс</option>
+                        </select>
+
+                        <div class="row">
+                            <input id="feedbackName" placeholder="Имя автора">
+                            <input id="feedbackDirection" placeholder="Направление">
+                        </div>
+
+                        <textarea id="feedbackComment" required placeholder="Комментарий"></textarea>
+                        <button type="submit">Добавить фидбек</button>
+                    </form>
+
+                    <hr>
+                    <div id="feedbacksList"></div>
+                </section>
+
+                <section class="card">
+                    <h3>Файлы проекта</h3>
+
+                    <form id="fileForm">
+                        <input id="projectFile" type="file" required>
+                        <button type="submit">Загрузить файл</button>
+                    </form>
+
+                    <p class="muted">
+                        На этой странице вложения загружаются к текущему проекту.
+                    </p>
+
+                    <div id="filesList"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="notice" class="notice"></div>
+
+<script>
+    const state = {
+        projects: [],
+        project: null,
+        tasks: [],
+        selectedTask: null,
+        documents: [],
+        releaseNotes: [],
+        feedbacks: [],
+        files: []
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function dateText(value) {
+        if (!value) return "";
+        return new Date(value).toLocaleString("ru-RU");
+    }
+
+    function notice(message, isError = false) {
+        const element = $("notice");
+        element.textContent = message;
+        element.className = isError ? "notice error" : "notice";
+        element.style.display = "block";
+
+        clearTimeout(notice.timer);
+        notice.timer = setTimeout(() => {
+            element.style.display = "none";
+        }, 3200);
+    }
+
+    async function api(path, options = {}) {
+        const response = await fetch(path, options);
+
+        let data = null;
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        }
+
+        if (!response.ok) {
+            const detail = data?.detail || "Ошибка запроса";
+            throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        }
+
+        return data;
+    }
+
+    function jsonOptions(method, body) {
+        return {
+            method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        };
+    }
+
+    async function loadProjects() {
+        try {
+            const status = $("projectStatusFilter").value;
+            const query = status ? `?status=${status}` : "";
+
+            state.projects = await api(`/api/projects${query}`);
+            renderProjects();
+
+            if (state.project) {
+                const stillVisible = state.projects.some(project => project.id === state.project.id);
+
+                if (!stillVisible) {
+                    clearWorkspace();
+                }
+            }
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    function renderProjects() {
+        const list = $("projectsList");
+
+        if (!state.projects.length) {
+            list.innerHTML = `<p class="muted">Проектов пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.projects.map(project => `
+            <div class="project-item ${state.project?.id === project.id ? "active" : ""}"
+                 onclick="selectProject(${project.id})">
+                <strong>${escapeHtml(project.name)}</strong>
+                <span class="badge ${project.status}">${escapeHtml(project.status)}</span>
+                <div class="muted">${dateText(project.created_at)}</div>
+            </div>
+        `).join("");
+    }
+
+    async function selectProject(projectId) {
+        try {
+            state.project = await api(`/api/projects/${projectId}`);
+            state.selectedTask = null;
+
+            await Promise.all([
+                loadDocuments(),
+                loadReleaseNotes(),
+                loadTasks(),
+                loadFeedbacks(),
+                loadFiles(),
+                loadStoryPointsTotal()
+            ]);
+
+            $("emptyWorkspace").classList.add("hidden");
+            $("projectWorkspace").classList.remove("hidden");
+
+            renderProjectHeader();
+            renderProjects();
+            renderTaskDetails();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    function clearWorkspace() {
+        state.project = null;
+        state.selectedTask = null;
+        $("projectWorkspace").classList.add("hidden");
+        $("emptyWorkspace").classList.remove("hidden");
+        renderProjects();
+    }
+
+    function renderProjectHeader() {
+        $("currentProjectName").textContent = state.project.name;
+        $("currentProjectDescription").textContent = state.project.description || "Описание не заполнено";
+        $("currentProjectStatus").innerHTML =
+            `<span class="badge ${state.project.status}">${escapeHtml(state.project.status)}</span>`;
+        $("currentProjectToken").textContent =
+            `Публичный токен: ${state.project.public_token}`;
+    }
+
+    async function editCurrentProject() {
+        if (!state.project) return;
+
+        const name = prompt("Название проекта:", state.project.name);
+        if (name === null) return;
+
+        const description = prompt("Описание проекта:", state.project.description);
+        if (description === null) return;
+
+        const projectStatus = prompt(
+            "Статус: active, completed или archived",
+            state.project.status
+        );
+        if (projectStatus === null) return;
+
+        try {
+            state.project = await api(
+                `/api/projects/${state.project.id}`,
+                jsonOptions("PATCH", {
+                    name,
+                    description,
+                    status: projectStatus
+                })
+            );
+
+            notice("Проект обновлён");
+            renderProjectHeader();
+            await loadProjects();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function deleteCurrentProject() {
+        if (!state.project) return;
+
+        if (!confirm(`Удалить проект "${state.project.name}"?`)) return;
+
+        try {
+            await api(`/api/projects/${state.project.id}`, { method: "DELETE" });
+            notice("Проект удалён");
+            clearWorkspace();
+            await loadProjects();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function loadDocuments() {
+        state.documents = await api(`/api/projects/${state.project.id}/documents`);
+        renderDocuments();
+    }
+
+    function renderDocuments() {
+        const list = $("documentsList");
+
+        if (!state.documents.length) {
+            list.innerHTML = `<p class="muted">Документации пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.documents.map(document => `
+            <div class="item">
+                <div class="item-title">
+                    <strong>${escapeHtml(document.title)}</strong>
+                    <span class="muted">${dateText(document.updated_at)}</span>
+                </div>
+                <div class="item-text">${escapeHtml(document.content)}</div>
+                <div class="actions">
+                    <button class="secondary small" onclick="editDocument(${document.id})">Изменить</button>
+                    <button class="danger small" onclick="deleteDocument(${document.id})">Удалить</button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function editDocument(documentId) {
+        const document = state.documents.find(item => item.id === documentId);
+        const title = prompt("Заголовок документа:", document.title);
+        if (title === null) return;
+
+        const content = prompt("Содержание документа:", document.content);
+        if (content === null) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/documents/${documentId}`,
+                jsonOptions("PATCH", { title, content })
+            );
+
+            notice("Документ обновлён");
+            await loadDocuments();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function deleteDocument(documentId) {
+        if (!confirm("Удалить документ?")) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/documents/${documentId}`,
+                { method: "DELETE" }
+            );
+
+            notice("Документ удалён");
+            await loadDocuments();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function loadReleaseNotes() {
+        state.releaseNotes = await api(`/api/projects/${state.project.id}/release-notes`);
+        renderReleaseNotes();
+    }
+
+    function renderReleaseNotes() {
+        const list = $("releaseNotesList");
+
+        if (!state.releaseNotes.length) {
+            list.innerHTML = `<p class="muted">Релизнотов пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.releaseNotes.map(note => `
+            <div class="item">
+                <div class="item-title">
+                    <strong>${escapeHtml(note.version)} — ${escapeHtml(note.title)}</strong>
+                </div>
+                <div class="item-text">${escapeHtml(note.description)}</div>
+                <div class="actions">
+                    <button class="secondary small" onclick="editReleaseNote(${note.id})">Изменить</button>
+                    <button class="danger small" onclick="deleteReleaseNote(${note.id})">Удалить</button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function editReleaseNote(noteId) {
+        const note = state.releaseNotes.find(item => item.id === noteId);
+
+        const version = prompt("Версия:", note.version);
+        if (version === null) return;
+
+        const title = prompt("Название:", note.title);
+        if (title === null) return;
+
+        const description = prompt("Описание изменений:", note.description);
+        if (description === null) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/release-notes/${noteId}`,
+                jsonOptions("PATCH", { version, title, description })
+            );
+
+            notice("Релизнот обновлён");
+            await loadReleaseNotes();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function deleteReleaseNote(noteId) {
+        if (!confirm("Удалить релизнот?")) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/release-notes/${noteId}`,
+                { method: "DELETE" }
+            );
+
+            notice("Релизнот удалён");
+            await loadReleaseNotes();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function loadTasks() {
+        state.tasks = await api(`/api/projects/${state.project.id}/tasks`);
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const list = $("tasksList");
+
+        if (!state.tasks.length) {
+            list.innerHTML = `<p class="muted">Задач пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.tasks.map(task => `
+            <div class="item task-item ${state.selectedTask?.id === task.id ? "selected" : ""}"
+                 onclick="selectTask(${task.id})">
+                <div class="item-title">
+                    <strong>${escapeHtml(task.title)}</strong>
+                    <span class="badge ${task.status}">${escapeHtml(task.status)}</span>
+                </div>
+                <span class="badge ${task.priority}">${escapeHtml(task.priority)}</span>
+                <div class="item-text">${escapeHtml(task.description)}</div>
+            </div>
+        `).join("");
+    }
+
+    async function selectTask(taskId) {
+        try {
+            state.selectedTask = await api(`/api/projects/${state.project.id}/tasks/${taskId}`);
+            renderTasks();
+            renderTaskDetails();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    function renderTaskDetails() {
+        if (!state.selectedTask) {
+            $("taskEmpty").classList.remove("hidden");
+            $("taskDetails").classList.add("hidden");
+            return;
+        }
+
+        $("taskEmpty").classList.add("hidden");
+        $("taskDetails").classList.remove("hidden");
+
+        const task = state.selectedTask;
+
+        $("selectedTaskInfo").innerHTML = `
+            <div class="item">
+                <div class="item-title">
+                    <strong>${escapeHtml(task.title)}</strong>
+                    <span class="badge ${task.status}">${escapeHtml(task.status)}</span>
+                </div>
+                <div class="item-text">${escapeHtml(task.description)}</div>
+                <div class="actions">
+                    <button class="secondary small" onclick="changeTaskStatus()">Изменить статус</button>
+                    <button class="danger small" onclick="deleteTask(${task.id})">Удалить задачу</button>
+                </div>
+            </div>
+        `;
+
+        $("storyPointValue").value = task.story_point?.points ?? "";
+
+        const subtasks = task.subtasks || [];
+        $("subtasksList").innerHTML = subtasks.length
+            ? subtasks.map(subtask => `
+                <div class="item">
+                    <div class="item-title">
+                        <strong>${escapeHtml(subtask.title)}</strong>
+                        <span class="badge ${subtask.status}">${escapeHtml(subtask.status)}</span>
+                    </div>
+                    <div class="item-text">${escapeHtml(subtask.description)}</div>
+                    <div class="actions">
+                        <button class="secondary small" onclick="changeSubtaskStatus(${subtask.id}, '${subtask.status}')">
+                            Изменить статус
+                        </button>
+                        <button class="danger small" onclick="deleteSubtask(${subtask.id})">Удалить</button>
+                    </div>
+                </div>
+            `).join("")
+            : `<p class="muted">Подзадач пока нет.</p>`;
+    }
+
+    async function changeTaskStatus() {
+        const newStatus = prompt(
+            "Статус: todo, in_progress, done или cancelled",
+            state.selectedTask.status
+        );
+
+        if (newStatus === null) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks/${state.selectedTask.id}`,
+                jsonOptions("PATCH", { status: newStatus })
+            );
+
+            notice("Статус задачи обновлён");
+            await loadTasks();
+            await selectTask(state.selectedTask.id);
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function deleteTask(taskId) {
+        if (!confirm("Удалить задачу?")) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks/${taskId}`,
+                { method: "DELETE" }
+            );
+
+            state.selectedTask = null;
+            notice("Задача удалена");
+
+            await loadTasks();
+            await loadStoryPointsTotal();
+            renderTaskDetails();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function changeSubtaskStatus(subtaskId, currentStatus) {
+        const newStatus = prompt(
+            "Статус: todo, in_progress, done или cancelled",
+            currentStatus
+        );
+
+        if (newStatus === null) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks/${state.selectedTask.id}/subtasks/${subtaskId}`,
+                jsonOptions("PATCH", { status: newStatus })
+            );
+
+            notice("Подзадача обновлена");
+            await selectTask(state.selectedTask.id);
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function deleteSubtask(subtaskId) {
+        if (!confirm("Удалить подзадачу?")) return;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks/${state.selectedTask.id}/subtasks/${subtaskId}`,
+                { method: "DELETE" }
+            );
+
+            notice("Подзадача удалена");
+            await selectTask(state.selectedTask.id);
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function loadStoryPointsTotal() {
+        const total = await api(`/api/projects/${state.project.id}/tasks/story-points/total`);
+        $("storyPointsTotal").textContent = total;
+    }
+
+    async function loadFeedbacks() {
+        state.feedbacks = await api(`/api/projects/${state.project.id}/feedbacks`);
+        renderFeedbacks();
+    }
+
+    function renderFeedbacks() {
+        const list = $("feedbacksList");
+
+        if (!state.feedbacks.length) {
+            list.innerHTML = `<p class="muted">Фидбеков пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.feedbacks.map(feedback => `
+            <div class="item">
+                <div class="item-title">
+                    <strong>${escapeHtml(feedback.full_name || "Без имени")}</strong>
+                    <span class="badge ${feedback.type}">${escapeHtml(feedback.type)}</span>
+                </div>
+                <div class="muted">${escapeHtml(feedback.direction || "")}</div>
+                <div class="item-text">${escapeHtml(feedback.comment)}</div>
+                <div class="actions">
+                    <button class="danger small" onclick="deleteFeedback(${feedback.id})">Удалить</button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function deleteFeedback(feedbackId) {
+        if (!confirm("Удалить фидбек?")) return;
+
+        try {
+            await api(`/api/feedbacks/${feedbackId}`, { method: "DELETE" });
+            notice("Фидбек удалён");
+            await loadFeedbacks();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    async function loadFiles() {
+        state.files = await api(`/api/files/project/${state.project.id}`);
+        renderFiles();
+    }
+
+    function renderFiles() {
+        const list = $("filesList");
+
+        if (!state.files.length) {
+            list.innerHTML = `<p class="muted">Файлов пока нет.</p>`;
+            return;
+        }
+
+        list.innerHTML = state.files.map(file => `
+            <div class="item">
+                <strong>${escapeHtml(file.original_filename)}</strong>
+                <div class="muted">${Math.round(file.size / 1024)} КБ</div>
+                <div class="actions">
+                    <a class="link" href="/api/files/${file.id}/download" target="_blank">Скачать</a>
+                    <button class="danger small" onclick="deleteFile(${file.id})">Удалить</button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function deleteFile(fileId) {
+        if (!confirm("Удалить файл?")) return;
+
+        try {
+            await api(`/api/files/${fileId}`, { method: "DELETE" });
+            notice("Файл удалён");
+            await loadFiles();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    }
+
+    $("projectCreateForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            const project = await api(
+                "/api/projects",
+                jsonOptions("POST", {
+                    name: $("projectCreateName").value,
+                    description: $("projectCreateDescription").value,
+                    status: "active"
+                })
+            );
+
+            event.target.reset();
+            notice("Проект создан");
+            await loadProjects();
+            await selectProject(project.id);
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("documentForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/documents`,
+                jsonOptions("POST", {
+                    title: $("documentTitle").value,
+                    content: $("documentContent").value
+                })
+            );
+
+            event.target.reset();
+            notice("Документ добавлен");
+            await loadDocuments();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("releaseForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/release-notes`,
+                jsonOptions("POST", {
+                    version: $("releaseVersion").value,
+                    title: $("releaseTitle").value,
+                    description: $("releaseDescription").value
+                })
+            );
+
+            event.target.reset();
+            notice("Релизнот добавлен");
+            await loadReleaseNotes();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("taskForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const pointsValue = $("taskPoints").value;
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks`,
+                jsonOptions("POST", {
+                    title: $("taskTitle").value,
+                    description: $("taskDescription").value,
+                    priority: $("taskPriority").value,
+                    status: "todo",
+                    story_points: pointsValue === "" ? null : Number(pointsValue)
+                })
+            );
+
+            event.target.reset();
+            $("taskPriority").value = "medium";
+            notice("Задача добавлена");
+            await loadTasks();
+            await loadStoryPointsTotal();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("subtaskForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/tasks/${state.selectedTask.id}/subtasks`,
+                jsonOptions("POST", {
+                    title: $("subtaskTitle").value,
+                    description: $("subtaskDescription").value,
+                    status: "todo"
+                })
+            );
+
+            event.target.reset();
+            notice("Подзадача добавлена");
+            await selectTask(state.selectedTask.id);
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("storyPointForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const points = Number($("storyPointValue").value);
+        const path = `/api/projects/${state.project.id}/tasks/${state.selectedTask.id}/story-points`;
+
+        try {
+            if (state.selectedTask.story_point) {
+                await api(path, jsonOptions("PATCH", { points }));
+            } else {
+                await api(path, jsonOptions("POST", { points }));
+            }
+
+            notice("Сторипоинты сохранены");
+            await selectTask(state.selectedTask.id);
+            await loadStoryPointsTotal();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("feedbackForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        try {
+            await api(
+                `/api/projects/${state.project.id}/feedbacks`,
+                jsonOptions("POST", {
+                    type: $("feedbackType").value,
+                    full_name: $("feedbackName").value || null,
+                    direction: $("feedbackDirection").value || null,
+                    comment: $("feedbackComment").value
+                })
+            );
+
+            event.target.reset();
+            notice("Фидбек добавлен");
+            await loadFeedbacks();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    $("fileForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const file = $("projectFile").files[0];
+
+        if (!file) {
+            notice("Выберите файл", true);
+            return;
+        }
+
+        const body = new FormData();
+        body.append("file", file);
+
+        try {
+            await api(`/api/files/project/${state.project.id}`, {
+                method: "POST",
+                body
+            });
+
+            event.target.reset();
+            notice("Файл загружен");
+            await loadFiles();
+        } catch (error) {
+            notice(error.message, true);
+        }
+    });
+
+    loadProjects();
+</script>
+</body>
+</html>

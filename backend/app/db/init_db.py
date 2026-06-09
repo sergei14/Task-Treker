@@ -1,40 +1,24 @@
 """
 init_db.py
 
-Этот файл отвечает за первичную инициализацию базы данных.
+Файл отвечает за первичную инициализацию базы данных:
+- запускает создание таблиц по ORM-моделям;
+- используется при старте FastAPI-приложения;
+- записывает информацию об успешном запуске или ошибке в лог.
 
-Что он делает:
-- создаёт SQLite-файл, если его ещё нет;
-- создаёт все таблицы по ORM-моделям;
-- позволяет запускать проект без внешней БД;
-- используется только в dev/test режиме.
-
-Важно:
-- в production используется Alembic, а не create_all
+Для текущей версии проекта таблицы создаются автоматически.
+В дальнейшем при переходе к production-режиму вместо create_all
+лучше будет использовать миграции Alembic.
 """
 
-import logging
-
+from app.core.logger import logger
 from app.db.base import create_tables
-
-logger = logging.getLogger("tracker.db")
 
 
 def init_db() -> None:
-    """
-    Инициализирует базу данных.
-
-    Выполняет:
-    - создание всех таблиц;
-    - логирование процесса;
-    - безопасный запуск при старте приложения.
-    """
-
-    logger.info("Инициализация базы данных...")
-
     try:
         create_tables()
-        logger.info("База данных успешно инициализирована")
-    except Exception as e:
-        logger.exception(f"Ошибка инициализации БД: {e}")
+        logger.info("Database tables initialized successfully")
+    except Exception:
+        logger.exception("Database initialization failed")
         raise
